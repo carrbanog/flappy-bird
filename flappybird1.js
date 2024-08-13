@@ -5,8 +5,8 @@ let boardHeight = 640
 let context;
 
 //bird
-let birdWidth = 34;
-let birdHeight = 24;
+let birdWidth = 39;
+let birdHeight = 32;
 let birdX = boardWidth/8;
 let birdY = boardHeight/2
 let birdImg
@@ -34,6 +34,7 @@ let velocityY = 0;//bird jump speed
 let gravity = 0.4;
 
 let gameOver = false;
+let score = 0;
 
 
 window.onload = function(){
@@ -89,9 +90,28 @@ function update(){
     // console.log(pipe.x);
     context.drawImage(pipe.img, pipe.x, pipe.y, pipe.width, pipe.height);
 
+    if(!pipe.passed && bird.x > pipe.x + pipe.width){
+      score += 0.5;
+      pipe.passed = true;
+    }
+
     if(detectCollision(bird, pipe)){
       gameOver = true;
     }
+  }
+
+  //clear pipes
+  while(pipeArray.length > 0 && pipeArray[0].x < -pipeWidth){
+    pipeArray.shift();
+  }
+
+  //score
+  context.fillStyle = "white";
+  context.font = "45px sans-serif";
+  context.fillText(score, 5, 45);
+
+  if(gameOver){
+    context.fillText("game over", 5, 90);
   }
 }
 
@@ -112,25 +132,31 @@ function placePipes(){
   }
   pipeArray.push(topPipe);
 
-  // let bottompipe = {
-  //   img : bottomPipeImg,
-  //   x : pipeX,
-  //   y : randomPipeY + pipeHeight + openingSpace,
-  //   width : pipeWidth,
-  //   height : pipeHeight,
-  //   passed : false
-  // }
-  // pipeArray.push(bottompipe);
+  let bottompipe = {
+    img : bottomPipeImg,
+    x : pipeX,
+    y : randomPipeY + pipeHeight + openingSpace,
+    width : pipeWidth,
+    height : pipeHeight,
+    passed : false
+  }
+  pipeArray.push(bottompipe);
 }
 
 function moveBird(e){
   if(e.code == "Space"){
     velocityY = -6;
     //space누르면 y축 -6씩 상승
+    if(gameOver){
+      bird.y = birdY;
+      pipeArray = [];
+      score = 0;
+      gameOver = false;
+    }
   }
 }
-//a.x = 새의 x축 위치 45
-//a.y = 새의 높이
+//a.x = 새의 x축 위치 (새의 왼쪽 기준)
+//a.y = 새의 높이(새의 위쪽 기준)
 //b.x = 파이프의 x축 위치
 //b.y = 파이프의 y축 위치
 //a.width = 새의 넓이 34
@@ -141,8 +167,12 @@ function moveBird(e){
 //충돌감지
 function detectCollision(a, b){
   return a.x < b.x + b.width &&
+  //객체 a의 왼쪽 끝이 객체 b의 오른쪽 끝보다 왼쪽에 있으면서
+  //a.x는 a의 왼쪽, a.x + a.width = (a의 왼쪽 + a의 넓이) a의 오른족 끝 
          a.x + a.width > b.x &&
+  //객체 a의 오른쪽 끝이 객체 b의 왼쪽 끝보다 오른쪽에 있으면 x축 방향에서 겹친다고 볼 수 있습니다
          a.y < b.y + b.height &&
-         a.y + a.height > b.y;
-        
+         a.y + a.height > b.y ;
+  //a.y < b.y + b.height: 객체 a의 위쪽 끝이 객체 b의 아래쪽 끝보다 위에 있으면서
+  //a.y + a.height > b.y: 객체 a의 아래쪽 끝이 객체 b의 위쪽 끝보다 아래에 있으면 y축 방향에서 겹친다고 볼 수 있습니다
 }
